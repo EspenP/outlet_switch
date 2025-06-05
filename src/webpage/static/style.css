@@ -1,0 +1,210 @@
+body {
+    background: #141414;
+    color: #d0d0d0;
+}
+
+input {
+    background-color: #353535;
+    color: #d0d0d0;
+    height: 21px;
+    width: 100%;
+    margin: 2px;
+    border: 2px inset #EBE9ED;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #141414;
+}
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    text-align: center;
+    padding: 16px;
+    text-decoration: none;
+}
+
+li a:hover {
+    background-color: #111111;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #e4e4e4;
+    margin: 5px;
+    font-family: courier;
+    text-align: center;
+    vertical-align: middle;
+}
+
+h5.content {
+    color: #e4e4e4;
+    font-family: courier;
+    text-align: right;
+    height: 22px;
+    vertical-align: bottom;
+    margin: 2px;
+}
+
+p {
+    font-family: courier;
+}
+
+p.center {
+    text-align: center;
+}
+
+a {
+    color: #5C7996;
+    font-weight: bold;
+    text-decoration: none;
+    font-family: courier;
+}
+
+a:hover {
+    background-color: #303030;
+}
+
+
+div.field {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+}
+
+div.row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin: 10px;
+}
+
+div.col {
+    flex: 50%;
+    justify-content: right;
+    align-items: right;
+}
+
+input.checkbox {
+    height: 25px;
+    width: 25px;
+}
+
+button {
+    width: 55%;
+    height: 22px;
+    margin: 2px;
+    position: relative;
+    color: #d0d0d0;
+    background-color: #353535;
+    outline: none;
+    font-size: 12px;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 3px 1px #d0d0d0;
+}
+
+button:hover {
+    box-shadow: 0 0 5px 2px #d0d0d0;
+}
+
+button:active {
+    background-color: #252525;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    box-shadow: 0 0 0px 0px #FFFFFF;
+}
+
+button.controlButton {
+    margin: 15px;
+
+    width: 300px;
+    height: 22px;
+    position: relative;
+    color: #d0d0d0;
+    background-color: #641E1E;
+    outline: none;
+    font-size: 12px;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 3px 1px #d0d0d0;
+}
+
+button.controlButton:hover {
+    box-shadow: 0 0 5px 2px #d0d0d0;
+}
+
+button.controlButton:active {
+    background-color: #252525;
+}
+
+button.addButton {
+    margin: 20px;
+
+    width: 300px;
+    height: 150px;
+    position: relative;
+    color: #d0d0d0;
+    background-color: #353535;
+    outline: none;
+    font-size: 150px;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0 0 10px 2px #d0d0d0;
+}
+
+button.addButton:hover {
+    box-shadow: 0 0 5px 2px #d0d0d0;
+}
+
+button.addButton:active {
+    background-color: #252525;
+}
+
+form {
+    margin: 20px;
+
+    width: 300px;
+    color: #d0d0d0;
+    background-color: #353535;
+    outline: none;
+    text-align: center;
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0 0 10px 2px #d0d0d0;
+}
+
+form:hover {
+    box-shadow: 0 0 5px 2px #d0d0d0;
+}
+
+#buttonspace {
+    margin-left: 5%;
+    margin-right: 5%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+    text-align: center;
+    background-color: #252525;
+    border: none;
+    border-radius: 20px;
+}

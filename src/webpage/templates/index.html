@@ -1,0 +1,338 @@
+<!--
+HTML code for the index page of the Wireless Outlet Controller function.
+
+@author Scythron
+@date 21 April 2019
+-->
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href='/static/style.css' />
+        <link rel="shortcut icon" type="image/x-icon" href="/static/favicon.ico" />
+
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+        <title>Wireless Outlet Controller</title>
+    </head>
+
+    <body onload="loadForms();">
+
+    <!-- Scripts -->
+    <script>
+
+    function loadForms() {
+        // ajax to load the titles from the data file
+        $.ajax({
+            data : {title : ''},
+            type : 'POST',
+            url : '/getTitles',
+            success : function(data) {
+                for(var i = 0; i < data.result.length; i++) {
+                    _loadHelper(data.result[i]);
+                }
+            }
+        });
+    }
+
+    function _loadHelper(title) {
+        var element = document.getElementById("buttonspace");
+
+        var btn = document.createElement("button");
+        btn.setAttribute("onclick", "controlButtonClicked('"+title+"');");
+        btn.setAttribute("class", "controlButton");
+        btn.setAttribute("id", title);
+        btn.innerHTML = title;
+
+        element.insertBefore(btn, element.childNodes[0]);
+    }
+
+    function controlButtonClicked(btn_title) {
+        // ajax to command the server to toggle the outlet, based on JS condition
+        var button = document.getElementById(btn_title);
+
+        if(toHex(getBackgroundColor(button)) == "#641E1E") {
+            $.ajax({
+                data : {title : btn_title},
+                type : 'POST',
+                url : '/turnOn',
+                success : function(data) {
+                    $("[id='" + btn_title + "']").css('background-color', '#1E501E');
+                }
+            });
+        }
+        else {
+            $.ajax({
+                data : {title : btn_title},
+                type : 'POST',
+                url : '/turnOff',
+                success : function(data) {
+                    $("[id='" + btn_title + "']").css('background-color', '#641E1E');
+                }
+            });
+        }
+    }
+
+    function getBackgroundColor(element) {
+        // https://www.permadi.com/tutorial/cssGettingBackgroundColor/index.html
+
+        if(element.currentStyle) {
+            return element.currentStyle.backgroundColor;
+        }
+        if(window.getComputedStyle) {
+            var elementStyle = window.getComputedStyle(element, "");
+            if(elementStyle) {
+                return elementStyle.getPropertyValue("background-color");
+            }
+        }
+        // Return 0 if both methods failed
+        return 0;
+    }
+
+    function toHex(rgb) {
+        var a = rgb.split("(")[1].split(")")[0];
+        a = a.split(",");
+
+        var r = parseInt(a[0]).toString(16);
+        var g = parseInt(a[1]).toString(16);
+        var b = parseInt(a[2]).toString(16);
+
+        a = "#" + r + g + b;
+        return a.toUpperCase();
+    }
+
+    function editClicked() {
+        var editButton = document.getElementById("editButton");
+        var addButton = document.getElementById("addButton");
+
+        // We need to check if the button says edit or delete.
+        // If it says edit, then we add checkboxes for removal.
+        // If it says delete, then we're forcing deletions then
+        // a refresh.
+        if(editButton.innerHTML == "Edit") {
+            var element = document.getElementById("buttonspace");
+            var len = element.children.length;
+
+            for(var i=0; i<len-1; i++) {
+                var div = document.createElement("div");
+                div.setAttribute("class", "row");
+
+                div.insertBefore(element.children[i], div.childNodes[0]);
+
+                var checkbox = document.createElement("input");
+                checkbox.setAttribute("class", "checkbox");
+                checkbox.setAttribute("type", "checkbox");
+                checkbox.setAttribute("onclick", "updateEditButton()");
+                checkbox.checked = false;
+                div.insertBefore(checkbox, div.childNodes[0]);
+
+                element.insertBefore(div, element.childNodes[i]);
+
+                // Final step to change the text of the edit button
+                editButton.innerHTML = "Cancel";
+            }
+
+            addButton.disabled = true;
+        }
+        else if(editButton.innerHTML == "Cancel") {
+            location.reload();
+            addButton.disabled = false;
+        }
+        else {
+            // Get a list of all of the outlets to delete
+            var element = document.getElementById("buttonspace");
+            var len = element.children.length;
+            var items = [];
+
+            for(var i=0; i<len-1; i++) {
+                if(element.children[i].children[0].checked) {
+                    items.push(element.children[i].children[1].innerHTML);
+                }
+            }
+
+            // ajax used to command the server to delete the specified outlets
+            $.ajax({
+                data : {titles : items},
+                type : 'POST',
+                url : '/deleteOutlets',
+                success : function(data) {
+                    window.location.reload();
+                    $('#addButton').attr('disabled', false);
+                }
+            });
+        }
+    }
+
+    function updateEditButton() {
+        var element = document.getElementById("buttonspace");
+        var btn = document.getElementById("editButton");
+        var len = element.children.length;
+
+        for(var i=0; i<len-1; i++) {
+            if(element.children[i].children[0].checked) {
+                btn.innerHTML = "Delete";
+                return;
+            }
+        }
+
+        btn.innerHTML = "Cancel";
+    }
+
+    function addClicked() {
+        var element = document.getElementById("buttonspace");
+
+        var form = document.createElement("form");
+        form.innerHTML = `
+            <div class="row">
+                <h5 class="content">Title:</h5>
+                <input id="outletTitle" type="text" onChange="checkTitle(this.value);"></input>
+            </div>
+            <div class="row">
+                <button id="onCode_btn" type="button" onclick="findOnCode()" disabled>ON Code</button>
+                <input id="onCode"  type="text" disabled></input>
+            </div>
+            <div class="row">
+                <button id="offCode_btn" type="button" onclick="findOffCode()" disabled>OFF Code</button>
+                <input id="offCode" type="text" disabled></input>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <!-- Because we don't specify type, clicking ok reloads the page -->
+                    <button id="ok_btn" disabled>OK</button>
+                </div>
+                <div class="col">
+                    <button id="cancel_btn" type="button" onclick="cancelAdd()">Cancel</button>
+                </div>
+            </div>
+        `;
+
+        element.insertBefore(form, element.childNodes[0]);
+
+        var addButton = document.getElementById("addButton");
+        addButton.disabled = true;
+        var editButton = document.getElementById("editButton");
+        editButton.disabled = true;
+    }
+
+    function checkTitle(val) {
+        // ajax to send the title to the server and see if it exists
+        $.ajax({
+            data : {title : $('#outletTitle').val()},
+            type : 'POST',
+            url : '/checkTitle',
+            success : function(data) {
+                if(data.result == 'Title Exists') {
+                    $('#onCode_btn').attr('disabled', true);
+                    $('#offCode_btn').attr('disabled', true);
+                    $('#outletTitle').css({'border' : '2px inset #FF0000'});
+                }
+                else {
+                    $('#onCode_btn').attr('disabled', false);
+                    $('#offCode_btn').attr('disabled', false);
+                    $('#outletTitle').css({'border' : '2px inset #EBE9ED'});
+                }
+            }
+        });
+    }
+
+    function findOnCode() {
+        btn = document.getElementById("onCode_btn");
+        btn.disabled = true;
+
+        // ajax to send the title to the server & receive code back
+        $.ajax({
+            data : {title : $('#outletTitle').val()},
+            type : 'POST',
+            url : '/findOnCode',
+            success : function(data) {
+                $('#outletTitle').attr('disabled', true);
+
+                $('#onCode').val(data.result);
+
+                if(data.result == 'Code Not Found') {
+                    $('#onCode_btn').attr('disabled', false);
+                }
+
+                if($('#onCode').val() != '' && $('#offCode').val() != '') {
+                    $('#ok_btn').attr('disabled', false);
+                }
+            }
+        });
+
+        return false;
+    }
+
+    function findOffCode() {
+        btn = document.getElementById("offCode_btn");
+        btn.disabled = true;
+
+        // ajax to send the title to the server & receive code back
+        $.ajax({
+            data : {title : $('#outletTitle').val()},
+            type : 'POST',
+            url : '/findOffCode',
+            success : function(data) {
+                $('#outletTitle').attr('disabled', true);
+
+                $('#offCode').val(data.result);
+
+                if(data.result == 'Code Not Found') {
+                    $('#offCode_btn').attr('disabled', false);
+                }
+
+                if($('#onCode').val() != '' && $('#offCode').val() != '') {
+                    $('#ok_btn').attr('disabled', false);
+                }
+            }
+        });
+
+        return false;
+    }
+
+    function cancelAdd() {
+        // Kill this element from the data file using ajax
+        $.ajax({
+            data : {title : $('#outletTitle').val()},
+            type : 'POST',
+            url : '/removeAdd',
+            success : function(data) {
+                var element = $('#buttonspace').children()[0];
+                element.remove();
+            }
+        });
+
+        var addButton = document.getElementById("addButton");
+        addButton.disabled = false;
+        var editButton = document.getElementById("editButton");
+        editButton.disabled = false;
+    }
+
+    </script>
+
+    <!-- The navigation bar -->
+    <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/schedule.html">Schedule</a></li>
+    </ul>
+
+    <h1>Wireless Outlet Controller</h1>
+    <h2>{{ today }}</h2>
+
+    <p class=center><i>Next Programmed Event: 
+        <a href="/todo">{{ event }}</a></i></p>
+
+    <hr>
+
+    <div id="buttonspace">
+        <div class="row" style="width:300px;">
+            <div class="col">
+                <button id="addButton" onclick="addClicked()">Add</button>
+            </div>
+            <div class="col">
+                <button id="editButton" onclick="editClicked()">Edit</button>
+            </div>
+        </div>
+    </div>
+
+    </body>
+</html>

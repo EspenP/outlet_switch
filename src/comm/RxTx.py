@@ -1,8 +1,8 @@
 import time
 import gpiod
 
-RECEIVE_LINE = 27   # GPIO.BOARD 11 → GPIO27
-TRANSMIT_LINE = 22  # GPIO.BOARD 7  → GPIO22
+RECEIVE_LINE = 27   # GPIO27
+TRANSMIT_LINE = 22  # GPIO22
 
 CHIP = "/dev/gpiochip0"
 
@@ -13,13 +13,19 @@ class RxTx:
 
         # Input line for receiver
         self.in_line = self.chip.get_line(RECEIVE_LINE)
-        self.in_line.request(consumer="rxtx_rx", type=gpiod.LINE_REQ_DIR_IN)
+        in_req = gpiod.LineRequest()
+        in_req.consumer = "rxtx_rx"
+        in_req.request_type = gpiod.LINE_REQ_DIR_IN
+        self.in_line.request(in_req)
 
         # Output line for transmitter
         self.out_line = self.chip.get_line(TRANSMIT_LINE)
-        self.out_line.request(consumer="rxtx_tx", type=gpiod.LINE_REQ_DIR_OUT, default_vals=[0])
+        out_req = gpiod.LineRequest()
+        out_req.consumer = "rxtx_tx"
+        out_req.request_type = gpiod.LINE_REQ_DIR_OUT
+        out_req.default_vals = [0]
+        self.out_line.request(out_req)
 
-        
     def _read(self):
         return self.in_line.get_value()
 

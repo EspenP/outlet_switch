@@ -10,20 +10,16 @@ class RxTx:
     def __init__(self, codes={}):
         self._codes = codes
         self.chip = gpiod.Chip(CHIP)
+
+        # Input line for receiver
         self.in_line = self.chip.get_line(RECEIVE_LINE)
+        self.in_line.request(consumer="rxtx_rx", type=gpiod.LINE_REQ_DIR_IN)
+
+        # Output line for transmitter
         self.out_line = self.chip.get_line(TRANSMIT_LINE)
+        self.out_line.request(consumer="rxtx_tx", type=gpiod.LINE_REQ_DIR_OUT, default_vals=[0])
 
-        config_in = gpiod.LineRequest()
-        config_in.consumer = "rxtx_rx"
-        config_in.request_type = gpiod.LINE_REQ_DIR_IN
-        self.in_line.request(config_in)
-
-        config_out = gpiod.LineRequest()
-        config_out.consumer = "rxtx_tx"
-        config_out.request_type = gpiod.LINE_REQ_DIR_OUT
-        config_out.default_vals = [0]
-        self.out_line.request(config_out)
-
+        
     def _read(self):
         return self.in_line.get_value()
 

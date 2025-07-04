@@ -149,10 +149,12 @@ def findOffCode():
 
 
 if __name__ == '__main__':
+    rxtx = RxTx()
     try:
-        rxtx = RxTx()
         data = DataRW()
-        app.run(host='0.0.0.0', port=5000, debug=True)
+        app.run(host='192.168.1.200', port=5000, debug=True)
         rxtx.cleanup()
     except Exception:
+        print(f"Exception ocurred: {e}")
+    finally:
         rxtx.cleanup()

@@ -107,4 +107,59 @@ class RxTx:
         one_high = one_low = zero_high = zero_low = None
         while idx + 2 < len(simp):
             first, second = simp[idx+1], simp[idx+2]
-            if
+            if first < second:
+                one_high, one_low = first/POWER, second/POWER
+            else:
+                zero_high, zero_low = first/POWER, second/POWER
+            if None not in (one_high, one_low, zero_high, zero_low):
+                break
+            idx += 2
+
+        return one_high, one_low, zero_high, zero_low, interval
+
+    def rxCode(self, runTime=None):
+        start_time = time.time()
+        while True:
+            if runTime and (time.time() - start_time) > runTime:
+                return None
+            buffer = self._createBuffer(start_time, mode=1)
+            codes = self._processBuffer(buffer, mode=1)
+            for key, known in self._codes.items():
+                if known in codes:
+                    return key
+
+    def txCode(self, code, one_high, one_low, zero_high, zero_low, interval):
+        for _ in range(10):
+            for bit in code:
+                if bit == '1':
+                    self._set_output(1)
+                    time.sleep(one_high)
+                    self._set_output(0)
+                    time.sleep(one_low)
+                else:
+                    self._set_output(1)
+                    time.sleep(zero_high)
+                    self._set_output(0)
+                    time.sleep(zero_low)
+            self._set_output(0)
+            time.sleep(interval)
+
+    def sniffCode(self, seekTime=2):
+        start_time = time.time()
+        while time.time() - start_time < seekTime:
+            low_buf = self._createBuffer(start_time, mode=0)
+            low_codes = self._processBuffer(low_buf, mode=0)
+            high_buf = self._createBuffer(start_time, mode=1)
+            high_codes = self._processBuffer(high_buf, mode=1)
+            timings = self._sniffTiming(time.time())
+            for hi in high_codes:
+                for lo in low_codes:
+                    if lo == hi[:-1]:
+                        return (hi, *timings)
+        return None
+
+    def cleanup(self):
+        self._set_output(0)
+        self.in_request.release()
+        self.out_request.release()
+        self.chip.close()

@@ -11,19 +11,33 @@ class RxTx:
         self._codes = codes
         self.chip = gpiod.Chip(CHIP)
 
-        # Input line for receiver
-        self.in_line = self.chip.get_line(RECEIVE_LINE)
-        self.in_line.request(consumer="rxtx_rx", type=gpiod.LINE_REQ_DIR_IN)
+        # Get lines (pass list of lines, even if just one)
+        self.in_lines = self.chip.get_lines([RECEIVE_LINE])
+        self.out_lines = self.chip.get_lines([TRANSMIT_LINE])
 
-        # Output line for transmitter
-        self.out_line = self.chip.get_line(TRANSMIT_LINE)
-        self.out_line.request(consumer="rxtx_tx", type=gpiod.LINE_REQ_DIR_OUT, default_vals=[0])
+        # Prepare line request config for input
+        in_req = gpiod.LineRequest()
+        in_req.consumer = "rxtx_rx"
+        in_req.request_type = gpiod.LINE_REQ_DIR_IN
+
+        # Request input line(s)
+        self.in_lines.request(in_req)
+
+        # Prepare line request config for output
+        out_req = gpiod.LineRequest()
+        out_req.consumer = "rxtx_tx"
+        out_req.request_type = gpiod.LINE_REQ_DIR_OUT
+        out_req.default_vals = [0]
+
+        # Request output line(s)
+        self.out_lines.request(out_req)
 
     def _read(self):
-        return self.in_line.get_value()
+        # get_values() returns list of values (even if single line)
+        return self.in_lines.get_values()[0]
 
     def _set_output(self, v):
-        self.out_line.set_value(v)
+        self.out_lines.set_values([v])
 
     def _createBuffer(self, start_time, mode=1):
         if mode not in (0, 1):

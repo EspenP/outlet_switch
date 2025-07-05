@@ -148,11 +148,13 @@ def findOffCode():
     return jsonify(out)
 
 
+
 if __name__ == '__main__':
-    try:
+
+    global rxtx, data
+    if rxtx is None:
         rxtx = RxTx()
-        data = DataRW()
-        app.run(host='0.0.0.0', port=5000, debug=True)
-        rxtx.cleanup()
-    except Exception:
-        rxtx.cleanup()
+        atexit.register(rxtx.cleanup)  # Ensure GPIOs are released at exit
+        data = DataRW()    
+
+    app.run(host='192.168.1.200', port=5000, debug=True)

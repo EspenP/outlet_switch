@@ -1,5 +1,6 @@
 import time
 import gpiod
+import atexit
 
 print(f"gpiod file: {gpiod.__file__}")
 print(f"gpiod version: {gpiod.__version__}")
@@ -15,33 +16,37 @@ class RxTx:
         self.chip = gpiod.Chip(CHIP)
 
         # --- Request input line ---
-        in_config = gpiod.LineSettings()
-        in_config.direction = gpiod.LineDirection.INPUT
 
         self.in_request = self.chip.request_lines(
-            config=in_config,
             consumer="rxtx_rx",
-            lines=[RECEIVE_LINE]
+            config={
+            RECEIVE_LINE: gpiod.LineSettings(
+                direction=gpiod.line.Direction.INPUT
+                )
+            }
         )
 
         # --- Request output line ---
-        out_config = gpiod.LineSettings()
-        out_config.direction = gpiod.LineDirection.OUTPUT
 
         self.out_request = self.chip.request_lines(
-            config=out_config,
             consumer="rxtx_tx",
-            lines=[TRANSMIT_LINE]
+            config={
+                TRANSMIT_LINE: gpiod.LineSettings(
+                direction=gpiod.line.Direction.OUTPUT
+                )
+            }
         )
 
         # Set initial output low
-        self.out_request.set_values([0])
+        self.out_request.set_values({TRANSMIT_LINE : gpiod.line.Value.INACTIVE})
+
+        atexit.register(self.cleanup)
 
     def _read(self):
-        return self.in_request.get_values()[0]
+        return self.in_request.get_values()[RECEIVE_LINE]
 
     def _set_output(self, v):
-        self.out_request.set_values([v])
+        self.out_request.set_values(v)
 
     def _createBuffer(self, start_time, mode=1):
         if mode not in (0, 1):
@@ -159,7 +164,20 @@ class RxTx:
         return None
 
     def cleanup(self):
-        self._set_output(0)
-        self.in_request.release()
-        self.out_request.release()
-        self.chip.close()
+        try:
+            self.out_request.set_values({TRANSMIT_LINE : gpiod.line.Value.INACTIVE})
+        except Exception:
+            pass
+        try:
+            self.in_request.release()
+        except Exception:
+            pass
+        try:
+            self.out_request.release()
+        except Exception:
+            pass
+        try:
+            self.chip.close()
+        except Exception:
+            pass
+        print("Successfully cleaned")
